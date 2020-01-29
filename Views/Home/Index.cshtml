@@ -1,0 +1,108 @@
+﻿@model Sample_Test.Models.Buyer
+
+<div class="text-center">
+    <h1 class="display-4">Buy Tickets</h1>
+
+    @*@using (Html.BeginForm("Save", "Home"))
+        {*@
+    <form action="javascript:saveEvent()">
+        <div class="range range-xs-center range-xs-middle section-cover section-90">
+            <div class="cell-xs-10 cell-lg-8">
+                <div>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-6 offset-3">
+                                <h2>Hurry up, Last ticket available!</h2>
+                                <div class="timer">
+                                    <div>
+                                        <span class="days" id="day"></span>
+                                        <div class="smalltext">Days</div>
+                                    </div>
+                                    <div>
+                                        <span class="hours" id="hour"></span>
+                                        <div class="smalltext">Hours</div>
+                                    </div>
+                                    <div>
+                                        <span class="minutes" id="minute"></span>
+                                        <div class="smalltext">Minutes</div>
+                                    </div>
+                                    <div>
+                                        <span class="seconds" id="second"></span>
+                                        <div class="smalltext">Seconds</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="group group-xl offset-top-30 offset-md-top-60 p-3">
+                        <input type="hidden" name="EventId" value="1" />
+                        <label>Buyer Name</label>
+                        <input type="text" id="buyerName" class="form-control" required />
+                        @*@Html.LabelFor(m => m.BuyerName)*@
+                        @*@Html.TextBoxFor(m => m.BuyerName, new { htmlAttributes = new { @id = "buyerName", @class = "form-control" } })*@
+                        @Html.ValidationMessageFor(m => m.BuyerName, "", new { @class = "text-danger" })
+                        <input id="btnSubmit" class="btn btn-primary" type="submit" value="Buy Tickets" />
+                        <p style="color:red" id="time-up"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    @*}*@
+
+</div>
+
+<script type="text/javascript">
+    var deadline = new Date("@ViewData["eventDate"]").getTime();
+    var flag = false;
+    function saveEvent() {
+         var currentTime = new Date().getTime();
+        var t = deadline - currentTime;
+        var days = Math.floor(t / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((t % (1000 * 60)) / 1000);
+        document.getElementById("day").innerHTML = days;
+        document.getElementById("hour").innerHTML = hours;
+        document.getElementById("minute").innerHTML = minutes;
+        document.getElementById("second").innerHTML = seconds;
+
+        var BuyerName = $("#buyerName").val();
+         $.post('/Home/SaveEvent',
+         {
+            BuyerName: BuyerName
+         },
+         function (data) {
+             if (data !== null && data.success) {
+                 flag = true;
+                 $("#buyerName").val("");
+                 document.getElementById("time-up").innerHTML = data.message;
+                 $('#btnSubmit').hide();
+                 document.getElementById("day").innerHTML = '0';
+                 document.getElementById("hour").innerHTML = '0';
+                 document.getElementById("minute").innerHTML = '0';
+                 document.getElementById("second").innerHTML = '0';
+             } else {
+                 document.getElementById("time-up").innerHTML = data.error;
+             }
+         });
+    }
+
+    if (!flag) {
+        var x = setInterval(function () {
+            $.get('/Home/GetByEventId?eventId=1', function (data) {
+                if (data !== null && data.success) {
+                    $("#buyerName").val("");
+                    clearInterval(x);
+                    document.getElementById("time-up").innerHTML = data.message;
+                    $('#btnSubmit').hide();
+                    document.getElementById("day").innerHTML = '0';
+                    document.getElementById("hour").innerHTML = '0';
+                    document.getElementById("minute").innerHTML = '0';
+                    document.getElementById("second").innerHTML = '0';
+                } 
+            });
+        }, 1000);
+    }
+</script>
